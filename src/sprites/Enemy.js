@@ -1,4 +1,3 @@
-// Enemy.js
 export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   constructor(scene, x, y) {
     super(scene, x, y, "enemy");
@@ -19,8 +18,8 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
     this.target = target;
   }
 
-  takeDamage(amount) {
-    if (this.isInvulnerable) return;
+  takeDamage(amount, isWeaponActive) {
+    if (this.isInvulnerable || isWeaponActive) return;
 
     this.health -= amount;
 

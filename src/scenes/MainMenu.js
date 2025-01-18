@@ -13,7 +13,6 @@ export default class MainMenu extends Phaser.Scene {
         this.add.text(centerX, centerY-100, 'Code Survivors', {
             fontSize: '48px',
             fill: '#fff',
-            fontfamily: 'monospace',
             fontStyle: 'bold'
         }).setOrigin(0.5);
 

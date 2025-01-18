@@ -7,12 +7,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this);
 
     this.scene = scene;
-    this.health = 10;
+    this.health = 40;
     this.moveSpeed = 200;
-    this.malfunctions = {
-      movement: false,
-      attack: false,
-    };
 
     // Movement controls
     this.controls = {
@@ -24,8 +20,6 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     // Set physics properties
     this.setCollideWorldBounds(true);
-    this.setDrag(1000);
-    this.setDamping(true);
     this.setSize(32, 32);
     this.setDrag(1000);
     this.setDamping(true);
@@ -41,6 +35,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     // Initialize weapon and start spinning
     this.createWeapon();
     this.startWeaponCycle();
+    this.weaponActive = false; // default false
     this.body.setAllowGravity(false);
 
     // --- add malware ---
@@ -86,9 +81,11 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.controls.left.isDown) {
       velocityX = -currentSpeed;
       this.lastDirection = "left";
+      this.setFlipX(true);
     } else if (this.controls.right.isDown) {
       velocityX = currentSpeed;
       this.lastDirection = "right";
+      this.setFlipX(false);
     }
 
     // Handle vertical movement
@@ -182,17 +179,26 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
   }
 
   createSpinTween() {
+    this.weapon.setVisible(true);
+    this.weaponActive = true;
+
+    // Determine the spin direction
+    const rotationDirection = this.flipX ? -Math.PI * 2 : Math.PI * 2;
+
     // Define the spin animation with ease
     const spinTween = this.scene.tweens.add({
       targets: this.weapon,
-      rotation: Math.PI * 2, // Full 360-degree rotation
+      rotation: rotationDirection,
       duration: 500, // Half a second for one spin
       ease: "Cubic.easeInOut", // Smooth easing in and out
       onComplete: () => {
         // Reset rotation
         this.weapon.setRotation(0);
+        this.weapon.setVisible(false);
+        this.weaponActive = false; // This will make the weapon not deal any dmg
+
         // Wait for 1.5 seconds before spinning again
-        this.scene.time.delayedCall(1500, () => {
+        this.scene.time.delayedCall(800, () => {
           this.createSpinTween();
         });
       },

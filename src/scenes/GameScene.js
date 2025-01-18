@@ -42,7 +42,8 @@ export default class GameScene extends Phaser.Scene {
       fontSize: '32px',
       fill: '#fff',
       stroke: '#000',
-      strokeThickness: 4
+      fontFamily: 'jetbrains mono'
+      // strokeThickness: 4
     });
     this.scoreText.setScrollFactor(0);
     this.scoreText.setDepth(11);
@@ -100,7 +101,9 @@ export default class GameScene extends Phaser.Scene {
     this.physics.add.overlap(
       this.player.weapon,
       this.enemies,
-      this.handleWeaponEnemyCollision,
+      (weapon, enemy) => {
+          this.handleWeaponEnemyCollision(weapon, enemy);
+      },
       null,
       this
     );
@@ -175,12 +178,17 @@ export default class GameScene extends Phaser.Scene {
   }
 
   handleWeaponEnemyCollision(weapon, enemy) {
-    if (!this.player.malfunctions.attack) {
-      enemy.takeDamage(5);
-      if (enemy.health <= 0) {
-        this.score += 10;  // Add points for killing enemy
-        this.scoreText.setText('Score: ' + this.score);
-      }
+    // Debug log to check weapon state
+    console.log('Weapon active state:', this.player.weaponActive);
+    
+    // Only process collision if weapon is active and no attack malfunction
+    if (this.player.weaponActive && !this.player.malfunctions.attack) {
+        enemy.takeDamage(5);
+        
+        if (enemy.health <= 0) {
+            this.score += 10;
+            this.scoreText.setText('Score: ' + this.score);
+        }
     }
   }
 
