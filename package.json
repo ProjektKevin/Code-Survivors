@@ -1,0 +1,28 @@
+{
+  "name": "code-survivors",
+  "version": "1.0.0",
+  "description": "This Project is for the Hack and Roll 2025. In this game, you are a robot and is trying to survive like a vampire survivor game. Everytime you get hit, you will break one of your functions and will be restricted from using that move until the code is fixed. The way you fix is by going around the map and finding toolkits scattered around the map. When you get one of those, you will be prompted to fix one of your broken functions where if you select one, you will need to code out the function.",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "webpack serve --open",
+    "build": "webpack --mode production"
+  },
+  
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "phaser": "^3.87.0",
+    "webpack": "^5.97.1",
+    "webpack-cli": "^6.0.1",
+    "webpack-dev-server": "^5.2.0"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "babel-loader": "^9.2.1",
+    "file-loader": "^6.2.0",
+    "html-webpack-plugin": "^5.6.3"
+  }
+}
