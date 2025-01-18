@@ -4,23 +4,23 @@ export default class RepairUI extends Phaser.Scene {
     super({ key: "RepairUI" });
   }
 
+  preload() {
+    this.scene.get("GameScene").scene.pause();
+  }
+
   create() {
+    const width = this.cameras.main.width;
+    const height = this.cameras.main.height;
+
     // Create semi-transparent background overlay
-    const overlay = this.add.rectangle(
-      0,
-      0,
-      this.cameras.main.width,
-      this.cameras.main.height,
-      0x000000,
-      0.7
-    );
+    const overlay = this.add.rectangle(0, 0, width, height, 0x000000, 0.7);
     overlay.setOrigin(0);
     overlay.setDepth(100);
     overlay.setScrollFactor(0);
 
     // Create popup container
-    const popupWidth = 600;
-    const popupHeight = 400;
+    const popupWidth = 700;
+    const popupHeight = 500;
     const x = (this.cameras.main.width - popupWidth) / 2;
     const y = (this.cameras.main.height - popupHeight) / 2;
 
@@ -88,12 +88,12 @@ export default class RepairUI extends Phaser.Scene {
 
       // Click handler
       button.on("pointerdown", () => {
-        this.startRepair(func);
+        this.repairFunction(func);
       });
     });
 
     // Add close button
-    const closeButton = this.add.text(x + popupWidth - 40, y + 20, "X", {
+    const closeButton = this.add.text(x + popupWidth - 30, y + 10, "X", {
       fontSize: "24px",
       fill: "#ffffff",
       fontFamily: "Arial",
@@ -107,6 +107,7 @@ export default class RepairUI extends Phaser.Scene {
       closeButton.setStyle({ fill: "#ffffff" });
     });
     closeButton.on("pointerdown", () => {
+      console.log("Close button clicked");
       this.closeRepairUI();
     });
 
@@ -127,20 +128,41 @@ export default class RepairUI extends Phaser.Scene {
     }
   }
 
-  startRepair(functionName) {
-    console.log(`Starting repair for: ${functionName}`);
-    // Here you would implement your code repair interface
-    // For now, let's just fix the function immediately
-    const gameScene = this.scene.get("GameScene");
-    gameScene.player.malfunctions[functionName] = false;
-    this.closeRepairUI();
+  repairFunction(funcName) {
+    console.log(`Repairing function: ${funcName}`);
+    try {
+      const gameScene = this.scene.get("GameScene");
+      if (gameScene && gameScene.player) {
+        gameScene.player.malfunctions[funcName] = false;
+        gameScene.player.health += 10; // Heal
+        this.closeUI();
+      } else {
+        console.error("Could not find GameScene or player");
+      }
+    } catch (error) {
+      console.error("Error in repairFunction:", error);
+    }
   }
 
   closeRepairUI() {
-    // Resume the game scene
-    const gameScene = this.scene.get("GameScene");
-    gameScene.scene.resume();
-    // Close this scene
-    this.scene.stop();
+    console.log("Attempting to close RepairUI");
+    try {
+      // Get reference to GameScene
+      const gameScene = this.scene.get("GameScene");
+
+      if (gameScene) {
+        // Resume GameScene first
+        console.log("Resuming GameScene");
+        this.scene.resume("GameScene");
+
+        // Then stop this UI scene
+        console.log("Stopping RepairUI");
+        this.scene.stop("RepairUI");
+      } else {
+        console.error("Could not find GameScene");
+      }
+    } catch (error) {
+      console.error("Error in closeUI:", error);
+    }
   }
 }

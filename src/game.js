@@ -3,6 +3,7 @@ import Phaser from 'phaser';
 import MainMenu from './scenes/MainMenu';
 import GameScene from './scenes/GameScene';
 import GameOverScene from './scenes/GameOverScene';
+import RepairUIScene from './scenes/RepairUI';
 
 const config = {
     type: Phaser.AUTO,
@@ -16,7 +17,7 @@ const config = {
             debug: false
         }
     },
-    scene: [MainMenu, GameScene, GameOverScene]
+    scene: [MainMenu, GameScene, RepairUIScene, GameOverScene]
 };
 
 new Phaser.Game(config);

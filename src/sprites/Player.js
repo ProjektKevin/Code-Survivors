@@ -7,7 +7,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this);
 
     this.scene = scene;
-    this.health = 40;
+    this.health = 30;
     this.moveSpeed = 200;
 
     // Movement controls

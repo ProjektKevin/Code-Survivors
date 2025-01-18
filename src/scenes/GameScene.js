@@ -21,13 +21,14 @@ export default class GameScene extends Phaser.Scene {
     this.greyOverlay = null;
     this.score = 0;
     this.scoreText = null;
+    this.healthText = null;
     this.worldBounds = { x: -2000, y: -2000, width: 4000, height: 4000 };
 
     // Toolkit spawn properties
     this.toolkits = null;
     this.lastToolkitSpawn = 0;
     this.toolkitSpawnInterval = 5000; // 5 seconds
-    this.baseSpawnChance = 0.2; // 20% base chance
+    this.baseSpawnChance = 1; // 20% base chance
     this.currentSpawnChance = 0.2; // Current chance that will increase
     this.spawnChanceIncrease = 0.1; // 10% increase each failed attempt
     this.maxSpawnChance = 0.8; // Maximum 80% chance
@@ -96,6 +97,22 @@ export default class GameScene extends Phaser.Scene {
       this.worldBounds.width,
       this.worldBounds.height
     );
+
+    // --- Health Bar ---
+    // Add health text below score
+    this.healthText = this.add.text(
+      16,
+      56,
+      `Health: ${this.player.health}/40`,
+      {
+        fontSize: "32px",
+        fill: "#fff",
+        stroke: "#000",
+        fontFamily: "jetbrains mono",
+      }
+    );
+    this.healthText.setScrollFactor(0);
+    this.healthText.setDepth(11);
 
     // ----- Create Enemy -----
     this.enemies = this.physics.add.group();
@@ -188,6 +205,21 @@ export default class GameScene extends Phaser.Scene {
   }
 
   // ========== Functions ==========
+  // --- Health ---
+  // Update the health display whenever player takes damage
+  updateHealthDisplay() {
+    if (this.player && this.healthText) {
+      this.healthText.setText(`Health: ${this.player.health}/40`);
+    }
+  }
+  // Add this to wherever you handle healing
+  handleHealing(amount) {
+    if (this.player) {
+      this.player.health = Math.min(this.player.health + amount, 40); // Cap at max health
+      this.updateHealthDisplay();
+    }
+  }
+
   // --- Toolkit ---
   trySpawnToolkit() {
     // Only proceed if player is damaged
@@ -329,7 +361,7 @@ export default class GameScene extends Phaser.Scene {
       const arrowY = screenCenterY + Math.sin(angle) * radius;
 
       this.arrow.setPosition(arrowX, arrowY);
-      this.arrow.setRotation(angle + Math.PI/2);
+      this.arrow.setRotation(angle + Math.PI / 2);
       this.arrow.setVisible(true);
 
       console.log("🎯 Arrow pointing to off-screen toolkit", {
@@ -354,11 +386,7 @@ export default class GameScene extends Phaser.Scene {
     // Reset spawn chance
     this.currentSpawnChance = this.baseSpawnChance;
 
-    // Add a small delay before pausing and showing UI
-    this.time.delayedCall(200, () => {
-      this.scene.pause();
-      this.scene.launch("RepairUI");
-    });
+    this.scene.launch("RepairUI");
   }
 
   // --- Enemy ---
@@ -397,6 +425,7 @@ export default class GameScene extends Phaser.Scene {
     const randomEffect = Phaser.Math.RND.pick(effects);
     player.applyMalfunction(randomEffect);
     player.handleEnemyCollision(10);
+    this.updateHealthDisplay();
   }
 
   // --- Weapon ---
