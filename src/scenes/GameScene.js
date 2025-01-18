@@ -1,12 +1,16 @@
 import Phaser from "phaser";
 import Player from "../sprites/Player.js";
 import groundImage from '../../assets/spritesheets/grassLand.png';
-import robotImage from '../../assets/sprites/test.png';
+import robotImage from '../../assets/sprites/Robot.png';
+import weaponImage from '../../assets/sprites/Weapon.png';
+import enemyImage from '../../assets/sprites/Enemy.png';
 
 export default class GameScene extends Phaser.Scene {
   constructor() {
     super({ key: "GameScene" });
     this.player = null;
+    this.enemies = null;
+    this.spawnTimer = null;
     this.backgroundContainer = null;
     this.lastRepeatX = 0;
     this.lastRepeatY = 0;
@@ -23,6 +27,8 @@ export default class GameScene extends Phaser.Scene {
     // Load assets relative to the public directory
     this.load.image("ground", groundImage);
     this.load.image("robot", robotImage);
+    this.load.image("weapon", weaponImage);
+    this.load.imaeg("enemy", enemyImage);
   }
 
   create() {
