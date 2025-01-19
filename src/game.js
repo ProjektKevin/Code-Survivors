@@ -10,14 +10,20 @@ const config = {
     width: 1380,
     height: 650,
     parent: 'game',
+    dom: {
+        createContainer: true
+    },
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 300 },
+            gravity: { y: 0 },
             debug: false
         }
     },
     scene: [MainMenu, GameScene, RepairUIScene, GameOverScene]
 };
 
-new Phaser.Game(config);
+// Create game instance
+window.addEventListener('load', () => {
+    new Phaser.Game(config);
+});

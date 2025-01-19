@@ -29,7 +29,7 @@ export default class GameScene extends Phaser.Scene {
     this.lastToolkitSpawn = 0;
     this.toolkitSpawnInterval = 5000; // 5 seconds
     this.baseSpawnChance = 1; // 20% base chance
-    this.currentSpawnChance = 0.2; // Current chance that will increase
+    this.currentSpawnChance = 1; // Current chance that will increase
     this.spawnChanceIncrease = 0.1; // 10% increase each failed attempt
     this.maxSpawnChance = 0.8; // Maximum 80% chance
 
@@ -171,6 +171,8 @@ export default class GameScene extends Phaser.Scene {
     this.arrow.setDepth(100);
     this.arrow.setScale(0.5);
     this.arrow.setVisible(false);
+
+    // this.physics.world.createDebugGraphic();
   }
 
   update() {
@@ -222,9 +224,8 @@ export default class GameScene extends Phaser.Scene {
 
   // --- Toolkit ---
   trySpawnToolkit() {
-    // Only proceed if player is damaged
-    if (this.player.health >= 40) {
-      console.log("❌ Spawn canceled: Player at full health");
+    if (this.toolkits.getChildren().length > 0 || this.player.health >= 40) {
+      console.log("❌ Spawn canceled: Toolkit exists or player at full health");
       return;
     }
 
@@ -414,29 +415,25 @@ export default class GameScene extends Phaser.Scene {
     // Destroy the enemy
     enemy.destroy();
 
-    // Apply random malware effect
-    const effects = [
-      "randomSpeed",
-      "invertControls",
-      // "noAttack",
-      "randomMovement",
-    ];
+    // Get list of possible new malfunctions (ones that aren't already active)
+    const possibleMalfunctions = ["randomSpeed", "invertControls", "noAttack", "randomMovement"]
+      .filter(effect => !player.malfunctions[effect]);
 
-    const randomEffect = Phaser.Math.RND.pick(effects);
-    player.applyMalfunction(randomEffect);
+    if (possibleMalfunctions.length > 0) {
+      // Only apply new malfunction if there are available ones
+      const randomEffect = Phaser.Math.RND.pick(possibleMalfunctions);
+      player.applyMalfunction(randomEffect);
+    }
+
+    // Apply damage
     player.handleEnemyCollision(10);
     this.updateHealthDisplay();
   }
 
   // --- Weapon ---
   handleWeaponEnemyCollision(weapon, enemy) {
-    // Debug log to check weapon state
-    console.log("Weapon active state:", this.player.weaponActive);
-
-    // Only process collision if weapon is active and no attack malfunction
-    if (this.player.weaponActive && !this.player.malfunctions.attack) {
-      enemy.takeDamage(5);
-
+    if (this.player.weaponActive && !this.player.malfunctions.noAttack) {
+      enemy.takeDamage(5, true);
       if (enemy.health <= 0) {
         this.score += 10;
         this.scoreText.setText("Score: " + this.score);

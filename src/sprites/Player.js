@@ -7,7 +7,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     scene.physics.add.existing(this);
 
     this.scene = scene;
-    this.health = 30;
+    this.health = 40;
     this.moveSpeed = 200;
 
     // Movement controls
@@ -24,8 +24,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.setDrag(1000);
     this.setDamping(true);
 
-    this.setSize(32, 32);    // Set the player's hit box (adjust values as needed)
-    this.setDepth(10); // make sure the player is not underneath the 
+    this.setSize(32, 32); // Set the player's hit box (adjust values as needed)
+    this.setDepth(10); // make sure the player is not underneath the
     this.isInvulnerable = false;
     this.invulnerabilityDuration = 1000; // Adjust player invulnerability time (ms)
 
@@ -40,14 +40,27 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
     // --- add malware ---
     this.malfunctions = {
-      movement: false,
-      attack: false,
-      controls: false,
-      speed: false,
+      randomMovement: false,
+      randomSpeed: false,
+      invertControls: false,
+      noAttack: false,
     };
 
-    // Store original speed for reset
-    this.originalMoveSpeed = this.moveSpeed;
+    // Store original settings for each malfunction type
+    this.originalSettings = {
+      moveSpeed: 200,  // Store the default move speed
+      weaponDamage: 5, // Store the default weapon damage
+      controls: {
+        up: Phaser.Input.Keyboard.KeyCodes.W,
+        down: Phaser.Input.Keyboard.KeyCodes.S,
+        left: Phaser.Input.Keyboard.KeyCodes.A,
+        right: Phaser.Input.Keyboard.KeyCodes.D,
+      }
+    };
+
+    // Initialize properties with default values
+    this.moveSpeed = this.originalSettings.moveSpeed;
+    this.weaponDamage = this.originalSettings.weaponDamage;
   }
 
   update() {
@@ -55,9 +68,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.handleMovement();
 
     // Update weapon position to follow player
-    if (this.weapon) {
-      this.weapon.setPosition(this.x, this.y);
-    }
+    this.updateWeapon();
   }
 
   // ========== Robot ==========
@@ -102,7 +113,7 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
 
     // Apply random movement glitches if malfunctioning
-    if (this.malfunctions.movement) {
+    if (this.malfunctions.randomMovement) {
       velocityX *= Phaser.Math.FloatBetween(0.5, 1.5);
       velocityY *= Phaser.Math.FloatBetween(0.5, 1.5);
     }
@@ -119,6 +130,45 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     }
   }
 
+  resetMalfunction(type) {
+    if (!this.malfunctions[type]) return; // If it's not malfunctioning, do nothing
+
+    switch (type) {
+      case "randomSpeed":
+        this.moveSpeed = this.originalSettings.moveSpeed;
+        break;
+
+      case "invertControls":
+        // Reset controls to original configuration
+        this.controls = {
+          up: this.scene.input.keyboard.addKey(
+            this.originalSettings.controls.up
+          ),
+          down: this.scene.input.keyboard.addKey(
+            this.originalSettings.controls.down
+          ),
+          left: this.scene.input.keyboard.addKey(
+            this.originalSettings.controls.left
+          ),
+          right: this.scene.input.keyboard.addKey(
+            this.originalSettings.controls.right
+          ),
+        };
+        break;
+
+      case "noAttack":
+        // No specific reset needed, just flag update
+        break;
+
+      case "randomMovement":
+        // No specific reset needed, just flag update
+        break;
+    }
+
+    // Update the malfunction status
+    this.malfunctions[type] = false;
+  }
+
   gameOver() {
     // Stop player movement and input
     // this.body.setVelocity(0);
@@ -128,20 +178,20 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     if (this.weapon) {
       this.weapon.destroy();
     }
-    
+
     // Play death animation if you have one
     this.scene.tweens.add({
       targets: this,
       alpha: 0,
       scale: 1.5,
       duration: 1000,
-      ease: 'Power2',
+      ease: "Power2",
       onComplete: () => {
         // Start GameOver scene
-        this.scene.scene.start('GameOverScene', {
-          score: this.scene.score || 0  // Pass any relevant data
+        this.scene.scene.start("GameOverScene", {
+          score: this.scene.score || 0, // Pass any relevant data
         });
-      }
+      },
     });
   }
   // ========== Weapon ==========
@@ -178,26 +228,32 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     this.createSpinTween();
   }
 
+  // In Player.js
+  // Replace the createSpinTween method with this fixed version
+
   createSpinTween() {
     this.weapon.setVisible(true);
     this.weaponActive = true;
 
-    // Determine the spin direction
-    const rotationDirection = this.flipX ? -Math.PI * 2 : Math.PI * 2;
+    // Reset rotation
+    this.weapon.setRotation(0);
 
-    // Define the spin animation with ease
+    // Set scale for weapon flipping
+    this.weapon.setScale(2 * (this.flipX ? -1 : 1), 2);
+
+    // Determine spin direction based on player facing
+    const rotationAmount = this.flipX ? -Math.PI * 2 : Math.PI * 2; // Counter-clockwise if facing left
+
     const spinTween = this.scene.tweens.add({
       targets: this.weapon,
-      rotation: rotationDirection,
-      duration: 500, // Half a second for one spin
-      ease: "Cubic.easeInOut", // Smooth easing in and out
+      rotation: rotationAmount,
+      duration: 500,
+      ease: "Cubic.easeInOut",
       onComplete: () => {
-        // Reset rotation
-        this.weapon.setRotation(0);
         this.weapon.setVisible(false);
-        this.weaponActive = false; // This will make the weapon not deal any dmg
+        this.weaponActive = false;
+        this.weapon.setRotation(0);
 
-        // Wait for 1.5 seconds before spinning again
         this.scene.time.delayedCall(800, () => {
           this.createSpinTween();
         });
@@ -205,19 +261,41 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
     });
   }
 
+  // Add this method to ensure weapon follows player correctly
+  updateWeapon() {
+    if (this.weapon) {
+      const offsetX = this.flipX ? -20 : 20; // Adjust these values as needed
+      
+      // Update sprite position
+      this.weapon.setPosition(this.x + offsetX, this.y);
+      this.weapon.setScale(2 * (this.flipX ? -1 : 1), 2);
+      
+      // Update physics body position using x and y properties
+      this.weapon.body.x = this.x + offsetX - this.weapon.body.width / 2;
+      this.weapon.body.y = this.y - this.weapon.body.height / 2;
+      
+      // Also update the physics body's position properties if needed
+      this.weapon.body.position.x = this.weapon.body.x;
+      this.weapon.body.position.y = this.weapon.body.y;
+      
+      // If using center positioning:
+      this.weapon.body.center.x = this.x + offsetX;
+      this.weapon.body.center.y = this.y;
+    }
+  }
+
+
   applyMalfunction(type) {
     if (this.isInvulnerable) return;
-    // Reset any existing malfunctions first
-    // this.resetMalfunctions();
 
     switch (type) {
       case "randomSpeed":
-        this.malfunctions.speed = true;
+        this.malfunctions.randomSpeed = true;
         this.moveSpeed = Phaser.Math.Between(50, 400);
         break;
 
       case "invertControls":
-        this.malfunctions.controls = true;
+        this.malfunctions.invertControls = true;
         const tempUp = this.controls.up;
         this.controls.up = this.controls.down;
         this.controls.down = tempUp;
@@ -227,22 +305,24 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         break;
 
       case "noAttack":
-        this.malfunctions.attack = true;
+        this.malfunctions.noAttack = true;
+        this.weaponDamage = 0; // Set damage to 0 when attack is disabled
         break;
 
       case "randomMovement":
-        this.malfunctions.movement = true;
+        this.malfunctions.randomMovement = true;
         break;
     }
+    
 
-    // Clear malfunction after random time between 5-10 seconds
-    this.scene.time.delayedCall(
-      Phaser.Math.Between(5000, 10000),
-      this.resetMalfunctions,
-      [],
-      this
-    );
+    // Log the applied malfunction for debugging
+    console.log(`Applied malfunction: ${type}`, {
+      moveSpeed: this.moveSpeed,
+      weaponDamage: this.weaponDamage,
+      malfunctions: {...this.malfunctions}
+    });
   }
+  
 
   // ========== Enemy Collision ==========
   handleEnemyCollision(amount) {
@@ -256,8 +336,8 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       alpha: { from: 0, to: 1 },
       duration: 100,
       yoyo: true,
-      repeat: this.invulnerabilityDuration / 400
-    })
+      repeat: this.invulnerabilityDuration / 400,
+    });
 
     // Make player invulnerable
     this.isInvulnerable = true;
@@ -268,6 +348,5 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
       this.isInvulnerable = false;
       this.alpha = 1;
     });
-    
   }
 }

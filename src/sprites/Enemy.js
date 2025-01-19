@@ -19,7 +19,7 @@ export default class Enemy extends Phaser.Physics.Arcade.Sprite {
   }
 
   takeDamage(amount, isWeaponActive) {
-    if (this.isInvulnerable || isWeaponActive) return;
+    if (this.isInvulnerable || !isWeaponActive) return;
 
     this.health -= amount;
 
