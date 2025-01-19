@@ -487,7 +487,7 @@ export default class RepairUI extends Phaser.Scene {
       }
 
       // If we get here, all tests passed
-      console.log("All tests passed for", malfunctionType);
+      console.log("malfunction type:", malfunctionType);
 
       // Get reference to GameScene
       const gameScene = this.scene.get("GameScene");
@@ -496,6 +496,7 @@ export default class RepairUI extends Phaser.Scene {
       }
 
       // Apply the repair
+      gameScene.player.resetMalfunction(malfunctionType);
       gameScene.player.malfunctions[malfunctionType] = false;
 
       // Heal the player

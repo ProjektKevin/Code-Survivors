@@ -157,16 +157,23 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
         break;
 
       case "noAttack":
-        // No specific reset needed, just flag update
+        this.weaponDamage = this.originalSettings.weaponDamage;
         break;
 
       case "randomMovement":
-        // No specific reset needed, just flag update
+        this.moveSpeed = this.originalSettings.moveSpeed;
         break;
     }
 
     // Update the malfunction status
     this.malfunctions[type] = false;
+
+    // Log the reset for debugging
+    console.log(`Reset malfunction: ${type}`, {
+      moveSpeed: this.moveSpeed,
+      weaponDamage: this.weaponDamage,
+      malfunctions: {...this.malfunctions}
+    });
   }
 
   gameOver() {
@@ -263,24 +270,33 @@ export default class Player extends Phaser.Physics.Arcade.Sprite {
 
   // Add this method to ensure weapon follows player correctly
   updateWeapon() {
-    if (this.weapon) {
-      const offsetX = this.flipX ? -20 : 20; // Adjust these values as needed
+    // Check if weapon exists and has a valid body
+    if (!this.weapon || !this.weapon.body) {
+      return;
+    }
+
+    const offsetX = this.flipX ? -20 : 20;
+    
+    // Update sprite position
+    this.weapon.setPosition(this.x + offsetX, this.y);
+    this.weapon.setScale(2 * (this.flipX ? -1 : 1), 2);
+    
+    // Safely update physics body
+    if (this.weapon.body) {
+      // Update physics body position
+      this.weapon.body.x = this.x + offsetX - (this.weapon.body.width || 0) / 2;
+      this.weapon.body.y = this.y - (this.weapon.body.height || 0) / 2;
       
-      // Update sprite position
-      this.weapon.setPosition(this.x + offsetX, this.y);
-      this.weapon.setScale(2 * (this.flipX ? -1 : 1), 2);
+      // Update physics body angle to match sprite rotation
+      this.weapon.body.angle = Phaser.Math.RadToDeg(this.weapon.rotation);
       
-      // Update physics body position using x and y properties
-      this.weapon.body.x = this.x + offsetX - this.weapon.body.width / 2;
-      this.weapon.body.y = this.y - this.weapon.body.height / 2;
-      
-      // Also update the physics body's position properties if needed
-      this.weapon.body.position.x = this.weapon.body.x;
-      this.weapon.body.position.y = this.weapon.body.y;
-      
-      // If using center positioning:
-      this.weapon.body.center.x = this.x + offsetX;
-      this.weapon.body.center.y = this.y;
+      // Optional: Adjust hitbox based on rotation
+      const absRotation = Math.abs(this.weapon.rotation % Math.PI);
+      if (absRotation > Math.PI / 4 && absRotation < (3 * Math.PI) / 4) {
+        this.weapon.body.setSize(6, 30);  // More vertical
+      } else {
+        this.weapon.body.setSize(30, 6);  // More horizontal
+      }
     }
   }
 
